@@ -309,6 +309,12 @@ spec:
         image: redis:alpine
         ports:
         - containerPort: 6379
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -327,64 +333,97 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: xxx
+  name: checkoutservice
 spec:
   selector:
     matchLabels:
-      app: xxx
+      app: checkoutservice
   template:
     metadata:
       labels:
-        app: xxx
+        app: checkoutservice
     spec:
       containers:
-      - name: xxx
-        image: xxx
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/checkoutservice
         ports:
-        - containerPort: xxx
+        - containerPort: 5050
+        env:
+        - name: PORT
+          value: "5050"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: "productcatalogservice:3550"
+        - name: SHIPPING_SERVICE_ADDR
+          value: "shippingservice:50051"
+        - name: CART_SERVICE_ADDR
+          value: "cartservice:7070"
+        - name: CURRENCY_SERVICE_ADDR
+          value: "currencyservice:7000"
+        - name: EMAIL_SERVICE_ADDR
+          value: "emailservice:8080"
+        - name: PAYMENT_SERVICE_ADDR
+          value: "paymentservice:50051"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: xxx
+  name: checkoutservice
 spec:
   type: ClusterIP
   selector:
-    app: xxx
+    app: checkoutservice
   ports:
-  - protocol: xxx
-    port: xxx
-    targetPort: xxx
+  - protocol: TCP
+    port: 5050
+    targetPort: 5050
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: xxx
+  name: frontend
 spec:
   selector:
     matchLabels:
-      app: xxx
+      app: frontend
   template:
     metadata:
       labels:
-        app: xxx
+        app: frontend
     spec:
       containers:
-      - name: xxx
-        image: xxx
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/frontend
         ports:
-        - containerPort: xxx
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: AD_SERVICE_ADDR
+          value: "adservice:9555"
+        - name: CHECKOUT_SERVICE_ADDR
+          value: "checkoutservice:5050"
+        - name: SHIPPING_SERVICE_ADDR
+          value: "shippingservice:50051"
+        - name: CURRENCY_SERVICE_ADDR 
+          value: "currencyservice:7000"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: "productcatalogservice:3550"
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: "recommendationservice:8080"
+        - name: CART_SERVICE_ADDR
+          value: "cartservice:7070"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: xxx
+  name: frontend
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
-    app: xxx
+    app: frontend
   ports:
-  - protocol: xxx
-    port: xxx
-    targetPort: xxx
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+    nodePort: 30007
