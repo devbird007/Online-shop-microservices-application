@@ -1,9 +1,0 @@
-appName: redis-cart
-appImage: redis
-appVersion: alpine
-appReplicas: 2
-containerPort: 6379
-
-
-servicePort: 6379
-serviceType: ClusterIP
