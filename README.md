@@ -1,0 +1,1 @@
+![web-page](images/sockshop-frontend.png)
